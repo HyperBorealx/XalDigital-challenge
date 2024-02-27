@@ -22,6 +22,7 @@ The project consists of the following components:
 1. **Database Setup:**
    - Designed PostgreSQL database schema based on provided data.
    - Created tables for `person`, `company`, `address`, `contact`, and `department`.
+     
  **1.1 Identify Entities:**
         Person:
         Attributes: first_name, last_name
