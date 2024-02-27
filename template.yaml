@@ -1,0 +1,226 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  DBInstanceIdentifier:
+    Type: String
+    Description: RDS instance identifier
+    Default: my-data-engineer-db
+  DBMasterUsername:
+    Type: String
+    Description: Master username for the database
+    Default: admin
+  DBMasterPassword:
+    Type: String
+    Description: Master password for the database
+    Default: adminPassword
+  DBName:
+    Type: String
+    Description: Name of the database
+    Default: data_engineer_db
+
+Resources:
+  MyDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      AllocatedStorage: 20
+      DBInstanceClass: db.t2.micro
+      Engine: postgres
+      EngineVersion: '13.4'
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterPassword
+      DBName: !Ref DBName
+      PubliclyAccessible: false
+
+  PersonTable:
+    Type: AWS::RDS::DBTable
+    Properties:
+      TableName: person
+      DBInstanceIdentifier: !Ref MyDBInstance
+      Columns:
+        - Name: first_name
+          Type: varchar(255)
+        - Name: last_name
+          Type: varchar(255)
+        - Name: company_name
+          Type: varchar(255)
+        - Name: address
+          Type: varchar(255)
+        - Name: city
+          Type: varchar(255)
+        - Name: state
+          Type: varchar(255)
+        - Name: zip
+          Type: varchar(255)
+        - Name: phone1
+          Type: varchar(20)
+        - Name: phone2
+          Type: varchar(20)
+        - Name: email
+          Type: varchar(255)
+        - Name: department
+          Type: varchar(255)
+  CompanyTable:
+    Type: AWS::RDS::DBTable
+    Properties:
+      TableName: company
+      DBInstanceIdentifier: !Ref MyDBInstance
+      Columns:
+        - Name: company_id
+          Type: serial
+          PrimaryKey: true
+        - Name: name
+          Type: varchar(255)
+        - Name: industry
+          Type: varchar(255)
+
+  AddressTable:
+    Type: AWS::RDS::DBTable
+    Properties:
+      TableName: address
+      DBInstanceIdentifier: !Ref MyDBInstance
+      Columns:
+        - Name: address_id
+          Type: serial
+          PrimaryKey: true
+        - Name: street
+          Type: varchar(255)
+        - Name: city
+          Type: varchar(255)
+        - Name: state
+          Type: varchar(255)
+        - Name: zip
+          Type: varchar(255)
+
+  ContactTable:
+    Type: AWS::RDS::DBTable
+    Properties:
+      TableName: contact
+      DBInstanceIdentifier: !Ref MyDBInstance
+      Columns:
+        - Name: contact_id
+          Type: serial
+          PrimaryKey: true
+        - Name: phone1
+          Type: varchar(20)
+        - Name: phone2
+          Type: varchar(20)
+        - Name: email
+          Type: varchar(255)
+
+  DepartmentTable:
+    Type: AWS::RDS::DBTable
+    Properties:
+      TableName: department
+      DBInstanceIdentifier: !Ref MyDBInstance
+      Columns:
+        - Name: department_id
+          Type: serial
+          PrimaryKey: true
+        - Name: name
+          Type: varchar(255)
+
+  # Define Foreign Key Constraints
+  PersonCompanyForeignKey:
+    Type: AWS::RDS::DBForeignKey
+    Properties:
+      DBInstanceIdentifier: !Ref MyDBInstance
+      TableName: person
+      Columns: [company_id]
+      ReferenceTableName: company
+      ReferenceColumns: [company_id]
+
+  PersonAddressForeignKey:
+    Type: AWS::RDS::DBForeignKey
+    Properties:
+      DBInstanceIdentifier: !Ref MyDBInstance
+      TableName: person
+      Columns: [address_id]
+      ReferenceTableName: address
+      ReferenceColumns: [address_id]
+
+  PersonContactForeignKey:
+    Type: AWS::RDS::DBForeignKey
+    Properties:
+      DBInstanceIdentifier: !Ref MyDBInstance
+      TableName: person
+      Columns: [contact_id]
+      ReferenceTableName: contact
+      ReferenceColumns: [contact_id]
+
+  PersonDepartmentForeignKey:
+    Type: AWS::RDS::DBForeignKey
+    Properties:
+      DBInstanceIdentifier: !Ref MyDBInstance
+      TableName: person
+      Columns: [department_id]
+      ReferenceTableName: department
+      ReferenceColumns: [department_id]
+      
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Role: arn:aws:iam::123456789012:role/lambda-execution-role
+      FunctionName: my-data-engineer-lambda
+      Runtime: nodejs14.x
+      Code:
+        S3Bucket: my-lambda-bucket
+        S3Key: lambda-code.zip
+      Environment:
+        Variables:
+          RDS_HOST: !GetAtt MyDBInstance.Endpoint.Address
+          RDS_USER: !Ref DBMasterUsername
+          RDS_PASSWORD: !Ref DBMasterPassword
+          RDS_DB: !Ref DBName
+
+  MyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: my-data-engineer-api
+
+  LambdaApiInvokeRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service: 'apigateway.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: 'LambdaInvokePolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource: '*'
+
+  LambdaApiInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt MyLambdaFunction.Arn
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyApiGateway}/*'
+
+  LambdaApiMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      AuthorizationType: 'NONE'
+      HttpMethod: 'GET'
+      ResourceId: !GetAtt MyApiGateway.RootResourceId
+      RestApiId: !Ref MyApiGateway
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MyLambdaFunction.Arn}/invocations
+
+Outputs:
+  DBEndpoint:
+    Description: Endpoint of the provisioned RDS instance
+    Value: !GetAtt MyDBInstance.Endpoint.Address
