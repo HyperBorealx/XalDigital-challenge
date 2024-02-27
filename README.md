@@ -16,15 +16,6 @@ The project consists of the following components:
 - **Lambda Function:** AWS Lambda function written in Node.js to interact with the database.
 - **API Gateway:** AWS API Gateway to expose RESTful endpoints for data retrieval and manipulation.
 
-## Project Structure
-data-engineer-challenge/
-├── docker-compose.yml # Docker Compose file for local development
-├── src/
-│ ├── lambda_function.js # AWS Lambda function code
-│ └── other_source_files...
-├── template.yaml # AWS SAM template for infrastructure as code
-├── README.md # Project documentation
-
 
 ## Functionality
 
