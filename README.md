@@ -22,6 +22,41 @@ The project consists of the following components:
 1. **Database Setup:**
    - Designed PostgreSQL database schema based on provided data.
    - Created tables for `person`, `company`, `address`, `contact`, and `department`.
+ **1.1 Identify Entities:**
+        Person:
+        Attributes: first_name, last_name
+     
+        Company:
+        Attributes: company_name
+        Address:
+        Attributes: address, city, state, zip
+     
+        Contact:    
+        Attributes: phone1, phone2, email
+     
+        Department:
+        Attributes: department
+     
+  **1.2 Identify Relationships:**
+        Person-Contact Relationship:
+        A person can have multiple contact details.
+        Relationship Attributes: None
+        
+        Person-Address Relationship:
+        A person can have one or more addresses.
+        Relationship Attributes: None
+        
+        Company-Address Relationship:
+        A company can have one or more addresses.
+        Relationship Attributes: None
+        
+        Company-Contact Relationship:
+        A company can have multiple contact details.
+        Relationship Attributes: None
+        Person-Department Relationship:
+        
+        A person belongs to a specific department.
+        Relationship Attributes: None
 
 2. **Lambda Function:**
    - Implemented AWS Lambda function to interact with the database.
@@ -33,7 +68,7 @@ The project consists of the following components:
    - Endpoints:
      - `GET /records`: Retrieve all records.
      - `POST /records`: Create a new record (example data required).
-
+      
 ## Getting Started
 
 ### Prerequisites
