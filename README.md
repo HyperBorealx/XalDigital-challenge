@@ -6,10 +6,7 @@
 - [Functionality](#functionality)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
-  - [Running the Project Locally](#running-the-project-locally)
 - [AWS Deployment](#aws-deployment)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Overview
 
@@ -52,4 +49,10 @@ data-engineer-challenge/
 
 - Docker and Docker Compose for local development.
 - AWS CLI and SAM CLI for AWS deployment.
+
+## AWS Deployment
+Package and deploy the Lambda function using SAM:
+sam package --s3-bucket <your-s3-bucket> --output-template-file packaged.yaml
+sam deploy --template-file packaged.yaml --stack-name data-engineer-stack --region <your-region> --capabilities CAPABILITY_IAM
+Update the API Gateway in the AWS Console with the new Lambda function URL.
 
