@@ -70,7 +70,7 @@ The project consists of the following components:
    - Configured API Gateway to expose RESTful endpoints.
    - Endpoints:
      - `GET /records`: Retrieve all records.
-     - `POST /records`: Create a new record (example data required).
+     - `POST /records`: Create a new record.
       
 ## Getting Started
 
