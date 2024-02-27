@@ -24,6 +24,7 @@ The project consists of the following components:
    - Created tables for `person`, `company`, `address`, `contact`, and `department`.
      
  **1.1 Identify Entities:**
+ 
         Person:
         Attributes: first_name, last_name
      
@@ -38,7 +39,8 @@ The project consists of the following components:
         Department:
         Attributes: department
      
-  **1.2 Identify Relationships:**
+**1.2 Identify Relationships:**
+  
         Person-Contact Relationship:
         A person can have multiple contact details.
         Relationship Attributes: None
